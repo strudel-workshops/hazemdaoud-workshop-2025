@@ -35,6 +35,86 @@ Your expertise includes:
 Provide clear, actionable advice to help researchers analyze their data effectively.
 When discussing parameters, explain their impact on the visualization and analysis.`;
 
+// Cache for GitHub context to avoid repeated fetches
+let githubContextCache: string | null = null;
+let cacheTimestamp: number = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Fetch GitHub repo content to provide context to AI
+async function fetchGitHubContext(): Promise<string> {
+  // Return cached context if still fresh
+  const now = Date.now();
+  if (githubContextCache && (now - cacheTimestamp) < CACHE_DURATION) {
+    console.log('Using cached GitHub context');
+    return githubContextCache;
+  }
+  
+  try {
+    console.log('Fetching CoInML documentation from GitHub...');
+    
+    // Fetch README from CoInML repository
+    const readmeResponse = await fetch(
+      'https://raw.githubusercontent.com/AMOS-experiment/CoInML/main/README.md'
+    );
+    
+    if (!readmeResponse.ok) {
+      console.warn('Could not fetch README:', readmeResponse.status);
+      return '';
+    }
+    
+    const readmeText = await readmeResponse.text();
+    
+    // Try to fetch additional documentation if available
+    let docsText = '';
+    try {
+      const docsResponse = await fetch(
+        'https://raw.githubusercontent.com/AMOS-experiment/CoInML/main/docs/documentation.md'
+      );
+      if (docsResponse.ok) {
+        docsText = await docsResponse.text();
+      }
+    } catch (error) {
+      // Docs might not exist, that's ok
+      console.log('Additional docs not found, using README only');
+    }
+    
+    // Format context for AI
+    let context = `
+
+=== COINML/SCULPT GITHUB REPOSITORY CONTEXT ===
+Repository: https://github.com/AMOS-experiment/CoInML
+
+=== README.md ===
+${readmeText}
+`;
+    
+    if (docsText) {
+      context += `
+
+=== ADDITIONAL DOCUMENTATION ===
+${docsText}
+`;
+    }
+    
+    context += `
+
+=== END OF REPOSITORY CONTEXT ===
+Use this information to provide accurate, specific answers about CoInML/SCULPT.
+`;
+    
+    // Cache the result
+    githubContextCache = context;
+    cacheTimestamp = Date.now();
+    
+    console.log('Successfully fetched and cached GitHub context');
+    return context;
+    
+  } catch (error) {
+    console.error('Error fetching GitHub context:', error);
+    return '';
+  }
+}
+
 export interface AIServiceConfig {
   provider: 'mock' | 'openai' | 'anthropic' | 'ollama';
   apiKey?: string;
@@ -68,8 +148,19 @@ class AIService {
 
   private getMockResponse(userMessage: string): string {
     const lowerMessage = userMessage.toLowerCase();
+    
+    // Log for debugging
+    console.log('Processing message:', lowerMessage);
 
-    if (lowerMessage.includes('umap')) {
+    // Check for specific topics first (most specific to least specific)
+    
+    // UMAP related queries
+    if (
+      lowerMessage.includes('umap') ||
+      lowerMessage.includes('n_neighbor') ||
+      lowerMessage.includes('min_dist')
+    ) {
+      console.log('Matched: UMAP');
       return `UMAP (Uniform Manifold Approximation and Projection) is excellent for visualizing high-dimensional COLTRIMS momentum data. 
 
 Key parameters to consider:
@@ -87,20 +178,14 @@ For COLTRIMS data, I recommend starting with:
 
 Then adjust based on whether you see too much or too little clustering.`;
     }
-
-    if (lowerMessage.includes('cluster') || lowerMessage.includes('pattern')) {
-      return `Clustering patterns in SCULPT reveal correlations in the momentum data that correspond to different physical processes.
-
-When interpreting clusters:
-1. **Check confidence scores**: High confidence suggests reliable grouping
-2. **Examine momentum distributions**: Look at Px, Py, Pz values within clusters
-3. **Compare molecular configurations**: D₂O vs HDO may show different patterns
-4. **Use genetic programming features**: Automatically discovered features often highlight physically meaningful correlations
-
-Dense, well-separated clusters typically indicate distinct reaction pathways or fragmentation patterns.`;
-    }
-
-    if (lowerMessage.includes('genetic') || lowerMessage.includes('feature')) {
+    
+    // Genetic programming and feature discovery
+    else if (
+      lowerMessage.includes('genetic') ||
+      lowerMessage.includes('feature') ||
+      lowerMessage.includes('generation')
+    ) {
+      console.log('Matched: Genetic Programming');
       return `Genetic programming in SCULPT automatically discovers meaningful features from your momentum data.
 
 How it works:
@@ -115,7 +200,33 @@ Best practices:
 - Combine with expert knowledge of your molecular system`;
     }
 
-    if (lowerMessage.includes('molecular') || lowerMessage.includes('configuration')) {
+    // Clustering related queries
+    else if (
+      lowerMessage.includes('cluster') ||
+      lowerMessage.includes('pattern')
+    ) {
+      console.log('Matched: Clustering');
+      return `Clustering patterns in SCULPT reveal correlations in the momentum data that correspond to different physical processes.
+
+When interpreting clusters:
+1. **Check confidence scores**: High confidence suggests reliable grouping
+2. **Examine momentum distributions**: Look at Px, Py, Pz values within clusters
+3. **Compare molecular configurations**: D₂O vs HDO may show different patterns
+4. **Use genetic programming features**: Automatically discovered features often highlight physically meaningful correlations
+
+Dense, well-separated clusters typically indicate distinct reaction pathways or fragmentation patterns.`;
+    }
+
+    // Molecular configuration queries
+    else if (
+      lowerMessage.includes('molecular') ||
+      lowerMessage.includes('configuration') ||
+      lowerMessage.includes('molecule') ||
+      lowerMessage.includes('d2o') ||
+      lowerMessage.includes('hdo') ||
+      lowerMessage.includes('h2o')
+    ) {
+      console.log('Matched: Molecular Configuration');
       return `Molecular configuration in SCULPT defines the expected particle types and masses for your system.
 
 Common configurations:
@@ -131,7 +242,14 @@ The configuration affects:
 You can create custom configurations for other molecules. Make sure to specify correct atomic masses and particle counts.`;
     }
 
-    if (lowerMessage.includes('data') || lowerMessage.includes('upload') || lowerMessage.includes('csv')) {
+    // Data preparation and upload queries
+    else if (
+      lowerMessage.includes('upload') ||
+      lowerMessage.includes('csv') ||
+      lowerMessage.includes('file') ||
+      lowerMessage.includes('import')
+    ) {
+      console.log('Matched: Data Upload');
       return `To analyze COLTRIMS data in SCULPT:
 
 1. **Prepare your CSV file** with columns: Px, Py, Pz for each particle
@@ -149,8 +267,33 @@ You can create custom configurations for other molecules. Make sure to specify c
 Expected data size: Thousands to millions of events work well. Very small datasets (<1000 events) may not cluster meaningfully.`;
     }
 
+    // COLTRIMS and physics queries
+    else if (
+      lowerMessage.includes('coltrims') ||
+      lowerMessage.includes('momentum') ||
+      lowerMessage.includes('physics') ||
+      lowerMessage.includes('spectroscopy')
+    ) {
+      console.log('Matched: COLTRIMS/Physics');
+      return `COLTRIMS (COLd Target Recoil Ion Momentum Spectroscopy) is a powerful technique for studying atomic and molecular collision processes.
+
+In SCULPT, we analyze:
+- **Momentum vectors** (Px, Py, Pz) for each particle
+- **Coincidence events** where multiple particles are detected
+- **Fragmentation patterns** revealing reaction dynamics
+
+The momentum data encodes:
+1. Energy and angular distributions
+2. Correlations between particles
+3. Signatures of different reaction pathways
+
+SCULPT uses machine learning to automatically identify patterns in this high-dimensional data that correspond to distinct physical processes.`;
+    }
+
     // Default response
-    return `I'm here to help you analyze COLTRIMS data with SCULPT! 
+    else {
+      console.log('Matched: Default response');
+      return `I'm here to help you analyze COLTRIMS data with SCULPT! 
 
 You can ask me about:
 - UMAP parameter selection and tuning
@@ -160,7 +303,14 @@ You can ask me about:
 - Understanding momentum correlations
 - Data preparation and analysis workflows
 
+Try asking specific questions like:
+- "Tell me about UMAP"
+- "Explain clustering patterns"
+- "How to upload data"
+- "What is genetic programming"
+
 What would you like to know?`;
+    }
   }
 
   // Method to add for future API integration
@@ -179,10 +329,59 @@ What would you like to know?`;
   }
 
   async callOllama(messages: Message[], userMessage: string): Promise<string> {
-    // Placeholder for Ollama integration
-    // When implemented, use SYSTEM_PROMPT as the system message
-    console.log('System prompt for Ollama:', SYSTEM_PROMPT);
-    throw new Error('Ollama integration not yet implemented');
+    try {
+      // Fetch GitHub repository context (cached for performance)
+      const githubContext = await fetchGitHubContext();
+      
+      // Combine system prompt with GitHub context
+      const fullSystemPrompt = SYSTEM_PROMPT + githubContext;
+      
+      // Format conversation history for Ollama
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content,
+      }));
+
+      // Add system prompt (with GitHub context) and current user message
+      const prompt = [
+        { role: 'system', content: fullSystemPrompt },
+        ...conversationHistory,
+        { role: 'user', content: userMessage },
+      ];
+
+      // Call Ollama API
+      const response = await fetch('http://localhost:11434/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: this.config.model || 'llama2', // Default to llama2, can be changed
+          messages: prompt,
+          stream: false,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.message.content;
+    } catch (error) {
+      console.error('Ollama error:', error);
+      // Fallback to mock response if Ollama is not available
+      return `⚠️ Ollama connection failed. Please ensure Ollama is running on localhost:11434.
+      
+To start Ollama:
+1. Install Ollama from https://ollama.ai
+2. Run: ollama serve
+3. Pull a model: ollama pull llama2
+
+Falling back to mock response:
+
+${this.getMockResponse(userMessage)}`;
+    }
   }
 }
 

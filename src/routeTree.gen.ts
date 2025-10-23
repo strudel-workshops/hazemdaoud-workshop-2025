@@ -18,6 +18,7 @@ import { Route as SearchDataRepositoriesIndexImport } from './pages/search-data-
 import { Route as PlaygroundIndexImport } from './pages/playground/index'
 import { Route as MonitorActivitiesIndexImport } from './pages/monitor-activities/index'
 import { Route as ExploreDataIndexImport } from './pages/explore-data/index'
+import { Route as CoinmlAppIndexImport } from './pages/coinml-app/index'
 import { Route as AiAssistantIndexImport } from './pages/ai-assistant/index'
 import { Route as SearchDataRepositoriesIdImport } from './pages/search-data-repositories/$id'
 import { Route as RunComputationLayoutImport } from './pages/run-computation/_layout'
@@ -97,6 +98,12 @@ const MonitorActivitiesIndexRoute = MonitorActivitiesIndexImport.update({
 const ExploreDataIndexRoute = ExploreDataIndexImport.update({
   id: '/explore-data/',
   path: '/explore-data/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const CoinmlAppIndexRoute = CoinmlAppIndexImport.update({
+  id: '/coinml-app/',
+  path: '/coinml-app/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -323,6 +330,13 @@ declare module '@tanstack/react-router' {
       path: '/ai-assistant'
       fullPath: '/ai-assistant'
       preLoaderRoute: typeof AiAssistantIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/coinml-app/': {
+      id: '/coinml-app/'
+      path: '/coinml-app'
+      fullPath: '/coinml-app'
+      preLoaderRoute: typeof CoinmlAppIndexImport
       parentRoute: typeof rootRoute
     }
     '/explore-data/': {
@@ -586,6 +600,7 @@ export interface FileRoutesByFullPath {
   '/run-computation': typeof RunComputationLayoutRouteWithChildren
   '/search-data-repositories/$id': typeof SearchDataRepositoriesIdRoute
   '/ai-assistant': typeof AiAssistantIndexRoute
+  '/coinml-app': typeof CoinmlAppIndexRoute
   '/explore-data': typeof ExploreDataIndexRoute
   '/monitor-activities': typeof MonitorActivitiesIndexRoute
   '/playground': typeof PlaygroundIndexRoute
@@ -615,6 +630,7 @@ export interface FileRoutesByTo {
   '/run-computation': typeof RunComputationLayoutIndexRoute
   '/search-data-repositories/$id': typeof SearchDataRepositoriesIdRoute
   '/ai-assistant': typeof AiAssistantIndexRoute
+  '/coinml-app': typeof CoinmlAppIndexRoute
   '/explore-data': typeof ExploreDataIndexRoute
   '/monitor-activities': typeof MonitorActivitiesIndexRoute
   '/playground': typeof PlaygroundIndexRoute
@@ -645,6 +661,7 @@ export interface FileRoutesById {
   '/run-computation/_layout': typeof RunComputationLayoutRouteWithChildren
   '/search-data-repositories/$id': typeof SearchDataRepositoriesIdRoute
   '/ai-assistant/': typeof AiAssistantIndexRoute
+  '/coinml-app/': typeof CoinmlAppIndexRoute
   '/explore-data/': typeof ExploreDataIndexRoute
   '/monitor-activities/': typeof MonitorActivitiesIndexRoute
   '/playground/': typeof PlaygroundIndexRoute
@@ -677,6 +694,7 @@ export interface FileRouteTypes {
     | '/run-computation'
     | '/search-data-repositories/$id'
     | '/ai-assistant'
+    | '/coinml-app'
     | '/explore-data'
     | '/monitor-activities'
     | '/playground'
@@ -705,6 +723,7 @@ export interface FileRouteTypes {
     | '/run-computation'
     | '/search-data-repositories/$id'
     | '/ai-assistant'
+    | '/coinml-app'
     | '/explore-data'
     | '/monitor-activities'
     | '/playground'
@@ -733,6 +752,7 @@ export interface FileRouteTypes {
     | '/run-computation/_layout'
     | '/search-data-repositories/$id'
     | '/ai-assistant/'
+    | '/coinml-app/'
     | '/explore-data/'
     | '/monitor-activities/'
     | '/playground/'
@@ -764,6 +784,7 @@ export interface RootRouteChildren {
   RunComputationRoute: typeof RunComputationRouteWithChildren
   SearchDataRepositoriesIdRoute: typeof SearchDataRepositoriesIdRoute
   AiAssistantIndexRoute: typeof AiAssistantIndexRoute
+  CoinmlAppIndexRoute: typeof CoinmlAppIndexRoute
   ExploreDataIndexRoute: typeof ExploreDataIndexRoute
   MonitorActivitiesIndexRoute: typeof MonitorActivitiesIndexRoute
   PlaygroundIndexRoute: typeof PlaygroundIndexRoute
@@ -780,6 +801,7 @@ const rootRouteChildren: RootRouteChildren = {
   RunComputationRoute: RunComputationRouteWithChildren,
   SearchDataRepositoriesIdRoute: SearchDataRepositoriesIdRoute,
   AiAssistantIndexRoute: AiAssistantIndexRoute,
+  CoinmlAppIndexRoute: CoinmlAppIndexRoute,
   ExploreDataIndexRoute: ExploreDataIndexRoute,
   MonitorActivitiesIndexRoute: MonitorActivitiesIndexRoute,
   PlaygroundIndexRoute: PlaygroundIndexRoute,
@@ -805,6 +827,7 @@ export const routeTree = rootRoute
         "/run-computation",
         "/search-data-repositories/$id",
         "/ai-assistant/",
+        "/coinml-app/",
         "/explore-data/",
         "/monitor-activities/",
         "/playground/",
@@ -873,6 +896,9 @@ export const routeTree = rootRoute
     },
     "/ai-assistant/": {
       "filePath": "ai-assistant/index.tsx"
+    },
+    "/coinml-app/": {
+      "filePath": "coinml-app/index.tsx"
     },
     "/explore-data/": {
       "filePath": "explore-data/index.tsx"

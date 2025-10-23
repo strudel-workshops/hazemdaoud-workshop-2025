@@ -170,3 +170,42 @@ To test the AI Assistant:
    - "What is genetic programming?"
 
 The mock service will provide contextual responses based on the question keywords.
+
+## Ollama Integration (Free AI)
+
+**Now implemented!** The AI Assistant includes full support for Ollama, a free local AI service.
+
+### Quick Setup
+
+See `OLLAMA_SETUP.md` for detailed instructions, or follow these quick steps:
+
+1. **Install Ollama**: Visit https://ollama.ai
+2. **Download a model**: `ollama pull llama2`
+3. **Start Ollama**: `ollama serve`
+4. **Switch mode in `aiService.ts`**:
+   ```typescript
+   // Change this line at the bottom of the file:
+   export const aiService = new AIService({ 
+     provider: 'ollama',
+     model: 'llama2'
+   });
+   ```
+
+### Benefits of Ollama
+
+- ✅ **Completely Free** - No API costs
+- ✅ **Private** - Data stays on your machine
+- ✅ **Offline** - Works without internet
+- ✅ **AI-Generated** - Dynamic, contextual responses
+- ✅ **Fallback** - Automatically falls back to mock if Ollama unavailable
+
+### Switching Modes
+
+| Mode | How to Enable | Use Case |
+|------|---------------|----------|
+| **Mock** | `provider: 'mock'` | Testing, no setup needed |
+| **Ollama** | `provider: 'ollama'` | Free AI, local privacy |
+| **OpenAI** | `provider: 'openai'` | Best quality (paid) |
+| **Claude** | `provider: 'anthropic'` | Alternative AI (paid) |
+
+For complete Ollama setup instructions, see **`OLLAMA_SETUP.md`** in this directory.
