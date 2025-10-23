@@ -45,20 +45,16 @@ async function fetchGitHubContext(): Promise<string> {
   // Return cached context if still fresh
   const now = Date.now();
   if (githubContextCache && (now - cacheTimestamp) < CACHE_DURATION) {
-    console.log('Using cached GitHub context');
     return githubContextCache;
   }
   
   try {
-    console.log('Fetching CoInML documentation from GitHub...');
-    
     // Fetch README from CoInML repository
     const readmeResponse = await fetch(
       'https://raw.githubusercontent.com/AMOS-experiment/CoInML/main/README.md'
     );
     
     if (!readmeResponse.ok) {
-      console.warn('Could not fetch README:', readmeResponse.status);
       return '';
     }
     
@@ -73,9 +69,8 @@ async function fetchGitHubContext(): Promise<string> {
       if (docsResponse.ok) {
         docsText = await docsResponse.text();
       }
-    } catch (error) {
+    } catch {
       // Docs might not exist, that's ok
-      console.log('Additional docs not found, using README only');
     }
     
     // Format context for AI
@@ -106,11 +101,9 @@ Use this information to provide accurate, specific answers about CoInML/SCULPT.
     githubContextCache = context;
     cacheTimestamp = Date.now();
     
-    console.log('Successfully fetched and cached GitHub context');
     return context;
     
-  } catch (error) {
-    console.error('Error fetching GitHub context:', error);
+  } catch {
     return '';
   }
 }
@@ -148,19 +141,13 @@ class AIService {
 
   private getMockResponse(userMessage: string): string {
     const lowerMessage = userMessage.toLowerCase();
-    
-    // Log for debugging
-    console.log('Processing message:', lowerMessage);
 
-    // Check for specific topics first (most specific to least specific)
-    
     // UMAP related queries
     if (
       lowerMessage.includes('umap') ||
       lowerMessage.includes('n_neighbor') ||
       lowerMessage.includes('min_dist')
     ) {
-      console.log('Matched: UMAP');
       return `UMAP (Uniform Manifold Approximation and Projection) is excellent for visualizing high-dimensional COLTRIMS momentum data. 
 
 Key parameters to consider:
@@ -180,12 +167,11 @@ Then adjust based on whether you see too much or too little clustering.`;
     }
     
     // Genetic programming and feature discovery
-    else if (
+    if (
       lowerMessage.includes('genetic') ||
       lowerMessage.includes('feature') ||
       lowerMessage.includes('generation')
     ) {
-      console.log('Matched: Genetic Programming');
       return `Genetic programming in SCULPT automatically discovers meaningful features from your momentum data.
 
 How it works:
@@ -201,11 +187,10 @@ Best practices:
     }
 
     // Clustering related queries
-    else if (
+    if (
       lowerMessage.includes('cluster') ||
       lowerMessage.includes('pattern')
     ) {
-      console.log('Matched: Clustering');
       return `Clustering patterns in SCULPT reveal correlations in the momentum data that correspond to different physical processes.
 
 When interpreting clusters:
@@ -218,7 +203,7 @@ Dense, well-separated clusters typically indicate distinct reaction pathways or 
     }
 
     // Molecular configuration queries
-    else if (
+    if (
       lowerMessage.includes('molecular') ||
       lowerMessage.includes('configuration') ||
       lowerMessage.includes('molecule') ||
@@ -226,7 +211,6 @@ Dense, well-separated clusters typically indicate distinct reaction pathways or 
       lowerMessage.includes('hdo') ||
       lowerMessage.includes('h2o')
     ) {
-      console.log('Matched: Molecular Configuration');
       return `Molecular configuration in SCULPT defines the expected particle types and masses for your system.
 
 Common configurations:
@@ -243,13 +227,12 @@ You can create custom configurations for other molecules. Make sure to specify c
     }
 
     // Data preparation and upload queries
-    else if (
+    if (
       lowerMessage.includes('upload') ||
       lowerMessage.includes('csv') ||
       lowerMessage.includes('file') ||
       lowerMessage.includes('import')
     ) {
-      console.log('Matched: Data Upload');
       return `To analyze COLTRIMS data in SCULPT:
 
 1. **Prepare your CSV file** with columns: Px, Py, Pz for each particle
@@ -268,13 +251,12 @@ Expected data size: Thousands to millions of events work well. Very small datase
     }
 
     // COLTRIMS and physics queries
-    else if (
+    if (
       lowerMessage.includes('coltrims') ||
       lowerMessage.includes('momentum') ||
       lowerMessage.includes('physics') ||
       lowerMessage.includes('spectroscopy')
     ) {
-      console.log('Matched: COLTRIMS/Physics');
       return `COLTRIMS (COLd Target Recoil Ion Momentum Spectroscopy) is a powerful technique for studying atomic and molecular collision processes.
 
 In SCULPT, we analyze:
@@ -291,9 +273,7 @@ SCULPT uses machine learning to automatically identify patterns in this high-dim
     }
 
     // Default response
-    else {
-      console.log('Matched: Default response');
-      return `I'm here to help you analyze COLTRIMS data with SCULPT! 
+    return `I'm here to help you analyze COLTRIMS data with SCULPT! 
 
 You can ask me about:
 - UMAP parameter selection and tuning
@@ -310,21 +290,20 @@ Try asking specific questions like:
 - "What is genetic programming"
 
 What would you like to know?`;
-    }
   }
 
   // Method to add for future API integration
-  async callOpenAI(messages: Message[], userMessage: string): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async callOpenAI(_messages: Message[], _userMessage: string): Promise<string> {
     // Placeholder for OpenAI integration
     // When implemented, use SYSTEM_PROMPT as the system message
-    console.log('System prompt for OpenAI:', SYSTEM_PROMPT);
     throw new Error('OpenAI integration not yet implemented');
   }
 
-  async callAnthropic(messages: Message[], userMessage: string): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async callAnthropic(_messages: Message[], _userMessage: string): Promise<string> {
     // Placeholder for Anthropic integration
     // When implemented, use SYSTEM_PROMPT as the system message
-    console.log('System prompt for Anthropic:', SYSTEM_PROMPT);
     throw new Error('Anthropic integration not yet implemented');
   }
 
@@ -356,7 +335,7 @@ What would you like to know?`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: this.config.model || 'llama2', // Default to llama2, can be changed
+          model: this.config.model || 'llama2',
           messages: prompt,
           stream: false,
         }),
@@ -368,8 +347,7 @@ What would you like to know?`;
 
       const data = await response.json();
       return data.message.content;
-    } catch (error) {
-      console.error('Ollama error:', error);
+    } catch {
       // Fallback to mock response if Ollama is not available
       return `⚠️ Ollama connection failed. Please ensure Ollama is running on localhost:11434.
       
@@ -394,9 +372,3 @@ export const aiService = new AIService({
   provider: isLocalhost ? 'ollama' : 'mock',
   model: 'llama2'
 });
-
-// Log which provider is being used
-if (typeof window !== 'undefined') {
-  console.log(`AI Assistant Mode: ${isLocalhost ? 'Ollama (Local)' : 'Mock (Cloud)'}`);
-  console.log(`Running on: ${window.location.hostname}`);
-}

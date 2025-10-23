@@ -42,9 +42,7 @@ function AIAssistant() {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
-    } catch (error) {
-      console.error('Error getting AI response:', error);
-      
+    } catch {
       // Add error message
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
