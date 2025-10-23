@@ -52,9 +52,18 @@ class AIService {
     messages: Message[],
     userMessage: string
   ): Promise<string> {
-    // For now, return mock responses
-    // Replace this with actual API calls based on config.provider
-    return this.getMockResponse(userMessage);
+    // Route to appropriate provider based on config
+    switch (this.config.provider) {
+      case 'openai':
+        return this.callOpenAI(messages, userMessage);
+      case 'anthropic':
+        return this.callAnthropic(messages, userMessage);
+      case 'ollama':
+        return this.callOllama(messages, userMessage);
+      case 'mock':
+      default:
+        return this.getMockResponse(userMessage);
+    }
   }
 
   private getMockResponse(userMessage: string): string {
@@ -157,16 +166,22 @@ What would you like to know?`;
   // Method to add for future API integration
   async callOpenAI(messages: Message[], userMessage: string): Promise<string> {
     // Placeholder for OpenAI integration
+    // When implemented, use SYSTEM_PROMPT as the system message
+    console.log('System prompt for OpenAI:', SYSTEM_PROMPT);
     throw new Error('OpenAI integration not yet implemented');
   }
 
   async callAnthropic(messages: Message[], userMessage: string): Promise<string> {
     // Placeholder for Anthropic integration
+    // When implemented, use SYSTEM_PROMPT as the system message
+    console.log('System prompt for Anthropic:', SYSTEM_PROMPT);
     throw new Error('Anthropic integration not yet implemented');
   }
 
   async callOllama(messages: Message[], userMessage: string): Promise<string> {
     // Placeholder for Ollama integration
+    // When implemented, use SYSTEM_PROMPT as the system message
+    console.log('System prompt for Ollama:', SYSTEM_PROMPT);
     throw new Error('Ollama integration not yet implemented');
   }
 }
