@@ -385,4 +385,9 @@ ${this.getMockResponse(userMessage)}`;
   }
 }
 
-export const aiService = new AIService({ provider: 'mock' });
+// export const aiService = new AIService({ provider: 'mock' });
+
+export const aiService = new AIService({ 
+  provider: 'ollama',
+  model: 'llama2'
+});
