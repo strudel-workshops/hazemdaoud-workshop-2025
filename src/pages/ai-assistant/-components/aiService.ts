@@ -385,9 +385,18 @@ ${this.getMockResponse(userMessage)}`;
   }
 }
 
-// export const aiService = new AIService({ provider: 'mock' });
+// Auto-detect environment and choose appropriate provider
+const isLocalhost = typeof window !== 'undefined' && 
+  (window.location.hostname === 'localhost' || 
+   window.location.hostname === '127.0.0.1');
 
 export const aiService = new AIService({ 
-  provider: 'ollama',
+  provider: isLocalhost ? 'ollama' : 'mock',
   model: 'llama2'
 });
+
+// Log which provider is being used
+if (typeof window !== 'undefined') {
+  console.log(`AI Assistant Mode: ${isLocalhost ? 'Ollama (Local)' : 'Mock (Cloud)'}`);
+  console.log(`Running on: ${window.location.hostname}`);
+}
